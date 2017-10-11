@@ -7,6 +7,7 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/solar/bootstrap.min.css" crossorigin="anonymous">
+    <link re="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/css/bootstrap-datepicker.css" crossorigin="anonymous" />
   </head>
   <body>
     
@@ -68,13 +69,57 @@
       </div>
     </div>
 
+    <div class="row">
+        <div class="col-lg-12">
+          <div id="birthday-display" style="display: none">
+                <h3>Next birthday</h3>
+                <div class="bs-component">
+                  <div class="progress progress-striped active">
+                    <div id="progress-birthday" class="progress-bar progress-bar-success" style="width: 45%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="life-display" style="display: none">
+                <h3>Life (if you die at <span id="death-age"></span> years old)</h3>
+                <div class="bs-component">
+                  <div class="progress progress-striped active">
+                    <div id="progress-life" class="progress-bar progress-bar-danger" style="width: 45%"></div>
+                  </div>
+                </div>
+              </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+          <h3>I was born in ... (yyyy/mm/dd)</h3>
+          <div class="bs-component">
+            <input id="birthdate-input" type="text" class="form-control" />
+          </div>
+          <div id="deathdate-input-container" style="display:none">
+            <h3>I might die in ... (yyyy/mm/dd)</h3>
+            <div class="bs-component">
+              <input id="deathdate-input" type="text" class="form-control" />
+            </div>
+          </div>
+        </div>
+    </div>
+
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/js/bootstrap-datepicker.min.js" crossorigin="anonymous"></script>
 
     <script type="text/javascript">
+
+      var birthDate,
+          deathDate,
+          deathAge,
+          lastBirthdayDate,
+          nextBirthdayDate;
 
       function updateProgressBar( elementId, normalisedProgress ){
         var bar = document.getElementById( elementId );
@@ -141,11 +186,56 @@
         updateProgressBar( "progress-month", monthProgress );
         updateProgressBar( "progress-year", yearProgress );
 
+        if (lastBirthdayDate && nextBirthdayDate) {
+          var birthDayProgress = (now.getTime() - lastBirthdayDate) / (nextBirthdayDate - lastBirthdayDate);
+          updateProgressBar( "progress-birthday", birthDayProgress );
+        }
+
+        if (birthDate && deathDate) {
+          var lifeProgress = (now.getTime() - birthDate.getTime()) / (deathDate.getTime() - birthDate.getTime());
+          updateProgressBar( "progress-life", lifeProgress );
+        }
+
         updateTime( now );
 
     };
 
       setInterval( updateClock, 1000.0 / 10.0 );
+
+      // input-related
+      var birthInput = $('#birthdate-input').datepicker({
+        autoclose: true,
+        format: 'yyyy/mm/dd'
+      });
+      var deathInput = $('#deathdate-input').datepicker({
+        autoclose: true,
+        format: 'yyyy/mm/dd'
+      });
+
+
+      birthInput.change(function(e){
+        birthDate = new Date($(this).val());
+
+        lastBirthdayDate = new Date(birthDate).setFullYear(new Date().getFullYear());
+        nextBirthdayDate = new Date(birthDate).setFullYear(new Date().getFullYear() + 1);
+        $('#birthday-display').css({display: 'block'});
+
+        $('#deathdate-input-container').css({display: 'block'});
+
+        if (birthDate && deathDate) {
+          $('#life-display').css({display: 'block'});
+          deathAge = deathDate.getFullYear() - birthDate.getFullYear();
+          $('#death-age').text(deathAge);
+        }
+      });
+      deathInput.change(function(e){
+        deathDate = new Date($(this).val());
+        if (birthDate && deathDate) {
+          $('#life-display').css({display: 'block'});
+          deathAge = deathDate.getFullYear() - birthDate.getFullYear();
+          $('#death-age').text(deathAge);
+        }
+      });
 
     </script>
   </body>
